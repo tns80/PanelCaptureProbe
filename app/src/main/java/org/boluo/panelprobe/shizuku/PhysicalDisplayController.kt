@@ -1,5 +1,6 @@
 package org.boluo.panelprobe.shizuku
 
+import android.annotation.SuppressLint
 import android.os.Build
 import android.os.IBinder
 import org.json.JSONArray
@@ -221,6 +222,10 @@ class PhysicalDisplayController {
         throw IllegalStateException("Cannot load DisplayControl", lastError)
     }
 
+    // This code is loaded only inside Shizuku's shell-UID UserService, where Shizuku explicitly
+    // provides a process without normal app non-SDK restrictions. Keep the suppression local:
+    // normal application code must not acquire or invoke this Runtime method.
+    @SuppressLint("BlockedPrivateApi", "PrivateApi")
     private fun loadAndroidServersLibrary(
         displayControlClass: Class<*>,
         loader: ClassLoader,

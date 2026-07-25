@@ -51,3 +51,24 @@ assembleDebug
 
 因此第一次 GitHub Actions 绿色成功是安装 APK 前的构建门槛；不能把本报告中的源码级检查
 表述为“APK 已构建通过”。
+
+## 第一次 CI 反馈与修复
+
+第一次 GitHub Actions 已进入 `compileDebugKotlin`，说明 Gradle 配置、依赖解析、
+Manifest、资源和 AIDL 阶段均已通过。首个 Kotlin 错误是对 `LongArray` 使用
+`mapNotNull`。该处已改为等价的显式循环；没有更改物理显示控制、安全计时或诊断流程。
+
+由于 CI 会在第一个编译错误处停止，后续阶段是否还有问题必须以第二次 Actions 日志为准。
+
+## 第二次 CI 反馈与修复
+
+第二次 CI 已通过 Kotlin/Java/AIDL 编译、JVM 单元测试并成功执行 `assembleDebug`。
+唯一阻塞发生在最后的 `lintDebug`：
+
+```text
+BlockedPrivateApi: Runtime.loadLibrary0
+```
+
+该反射仅存在于 Shizuku shell-UID UserService 使用的 Android 14+ 显示控制兼容路径。
+本次只对包含该反射的私有方法添加局部 Lint 抑制和说明。全局 `abortOnError` 保持开启，
+其余 Lint 错误仍会阻止构建。
