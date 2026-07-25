@@ -148,7 +148,11 @@ class PhysicalDisplayController {
         val setMode = findStaticMethod(powerOwner, "setDisplayPowerMode", 2)
         val ids = getIds.invoke(null) as? LongArray
             ?: error("${tokenOwner.name}.getPhysicalDisplayIds returned no long[]")
-        val tokens = ids.mapNotNull { id -> getToken.invoke(null, id) as? IBinder }
+        val tokens = mutableListOf<IBinder>()
+        for (id in ids) {
+            val token = getToken.invoke(null, id) as? IBinder
+            if (token != null) tokens += token
+        }
         check(tokens.isNotEmpty()) { "No token returned for ${ids.size} physical display(s)" }
         return DisplayAccess(strategy, ids, tokens, setMode)
     }
