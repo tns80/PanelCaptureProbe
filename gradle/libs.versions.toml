@@ -1,0 +1,12 @@
+[versions]
+agp = "9.3.0"
+junit4 = "4.13.2"
+shizuku = "13.1.5"
+
+[libraries]
+junit4 = { module = "junit:junit", version.ref = "junit4" }
+shizuku-api = { module = "dev.rikka.shizuku:api", version.ref = "shizuku" }
+shizuku-provider = { module = "dev.rikka.shizuku:provider", version.ref = "shizuku" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }

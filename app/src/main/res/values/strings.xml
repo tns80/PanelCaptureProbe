@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">面板捕获诊断</string>
+    <string name="notification_channel_name">面板捕获诊断</string>
+    <string name="notification_channel_description">显示限时面板关闭测试的进度和紧急恢复入口</string>
+</resources>

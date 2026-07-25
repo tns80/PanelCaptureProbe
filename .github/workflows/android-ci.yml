@@ -1,0 +1,107 @@
+name: Android CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: panel-capture-probe-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Verify, test, lint and build diagnostic APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Install Android SDK 36
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          android_sdk="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
+          if [[ -z "$android_sdk" ]]; then
+            echo "Android SDK was not found."
+            exit 1
+          fi
+
+          sdkmanager="$android_sdk/cmdline-tools/latest/bin/sdkmanager"
+          if [[ ! -x "$sdkmanager" ]]; then
+            sdkmanager="$(command -v sdkmanager || true)"
+          fi
+          if [[ -z "$sdkmanager" || ! -x "$sdkmanager" ]]; then
+            echo "sdkmanager was not found."
+            exit 1
+          fi
+
+          yes | "$sdkmanager" --licenses >/dev/null || true
+          "$sdkmanager" \
+            "platforms;android-36" \
+            "build-tools;36.0.0"
+
+          printf 'sdk.dir=%s\n' "$android_sdk" > local.properties
+
+      - name: Verify, test, lint and assemble
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x gradlew
+          ./gradlew \
+            clean \
+            verifySafetyPolicy \
+            testDebugUnitTest \
+            lintDebug \
+            assembleDebug \
+            --stacktrace \
+            --no-daemon
+
+      - name: Generate checksum
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f dist/PanelCaptureProbe-v0.1.0-debug.apk
+          (
+            cd dist
+            sha256sum PanelCaptureProbe-v0.1.0-debug.apk > SHA256SUMS.txt
+          )
+          cat dist/SHA256SUMS.txt
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v7
+        with:
+          name: PanelCaptureProbe-v0.1.0-apk
+          path: |
+            dist/PanelCaptureProbe-v0.1.0-debug.apk
+            dist/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: PanelCaptureProbe-v0.1.0-reports
+          path: |
+            app/build/reports/**
+            app/build/test-results/**
+          if-no-files-found: ignore
+          retention-days: 30

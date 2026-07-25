@@ -1,0 +1,9 @@
+<resources>
+    <color name="page_background">#0B171D</color>
+    <color name="panel_background">#13262F</color>
+    <color name="text_primary">#F3F7F8</color>
+    <color name="text_secondary">#B8C8CE</color>
+    <color name="accent">#43D4BA</color>
+    <color name="warning">#FFD166</color>
+    <color name="danger">#FF6B6B</color>
+</resources>
